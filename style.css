@@ -1,0 +1,16 @@
+body{
+    background: rgb(75, 75, 75);
+    grid-template-columns: 2fr 1fr;
+    display: grid;
+    gap: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.card {
+    background: rgb(179, 177, 177);
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    overflow: hidden;
+    padding: 10px;
+}
