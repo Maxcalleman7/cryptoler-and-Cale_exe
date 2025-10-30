@@ -1,5 +1,5 @@
 body{
-    background: rgb(75, 75, 75);
+    background: rgb(170, 170, 170);
     grid-template-columns: 2fr 1fr;
     display: grid;
     gap: 20px;
@@ -7,7 +7,7 @@ body{
 }
 
 .card {
-    background: rgb(223, 223, 223);
+    background: rgb(188, 188, 188);
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     margin-bottom: 20px;
