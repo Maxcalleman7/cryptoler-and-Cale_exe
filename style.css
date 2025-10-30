@@ -1,16 +1,70 @@
-body{
-    background: rgb(170, 170, 170);
-    grid-template-columns: 2fr 1fr;
-    display: grid;
-    gap: 20px;
-    font-family: Arial, sans-serif;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f2f2f2;
+  color: #111;
+}
+
+header {
+  background: #111;
+  color: #fff;
+  text-align: center;
+  padding: 12px;
+}
+
+.container {
+  width: 90%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+h1 {
+  margin: 0 0 12px 0;
+  font-size: 24px;
+}
+
+.nav {
+  margin-bottom: 16px;
+}
+
+.nav a {
+  color: #111;
+  text-decoration: none;
+  margin-right: 8px;
 }
 
 .card {
-    background: rgb(188, 188, 188);
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-    overflow: hidden;
-    padding: 10px;
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+.links {
+  padding-left: 20px;
+}
+
+.links a {
+  color: #0b5bd3;
+}
+
+/* Simple stacked gallery */
+.gallery figure {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin: 0 0 12px 0;
+}
+
+.gallery img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.gallery figcaption {
+  margin-top: 6px;
+  color: #444;
+  font-size: 14px;
 }
