@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #000;
+    }
+    /* Fullscreen video that covers the whole screen */
+    .video-fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* fill screen while preserving aspect ratio */
+    }
+  </style>
+  <!-- Byt ut src nedan till din videofil när den är klar -->
+</head>
+<body>
+  <video class="video-fullscreen" autoplay muted loop playsinline>
+    <source src="/images/493.0-631.0.mp4" type="video/mp4">
+    Din webbläsare stödjer inte video-taggen.
+  </video>
+</body>
+</html>
