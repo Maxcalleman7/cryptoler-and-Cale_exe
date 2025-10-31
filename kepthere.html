@@ -1,24 +1,189 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fullskärmsvideo</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>...</title>
   <style>
-    html, body { height: 100%; margin: 0; background: #000; }
-    .video-fullscreen {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-    }
+    html, body { height: 100%; margin: 0; background: #000; cursor: none; overflow: hidden; }
+    .v { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: contrast(1.05) saturate(1.1); }
+    .o { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: #f00; font: 700 5vw/1.1 system-ui, Segoe UI, Arial; mix-blend-mode: screen; pointer-events: none; text-shadow: 0 0 8px #f00, 0 0 24px #f00; }
+    .g { animation: gl 2.5s infinite steps(2); }
+    @keyframes gl { 0% { filter: hue-rotate(0) contrast(1) } 50% { filter: hue-rotate(20deg) contrast(2) blur(.5px) } 100% { filter: hue-rotate(0) contrast(1) } }
+    /* removed image-based jumpscare overlay */
+    .f { position: fixed; inset: 0; background: #fff; opacity: 0; transition: opacity .08s; pointer-events: none; mix-blend-mode: screen; }
+    @keyframes sh { 0% { transform: translate(2px,-2px) } 50% { transform: translate(-3px,3px) } 100% { transform: translate(0,0) } }
+    .shk { animation: sh .18s steps(2); }
   </style>
 </head>
 <body>
-  <video class="video-fullscreen" autoplay muted loop playsinline>
-    <source src="images/493.0-631.0.mp4" type="video/mp4">
-    Din webbläsare stödjer inte video-taggen.
+  <video class="v g" autoplay muted loop playsinline>
+    <source src="images/493.0-631.0.mp4" type="video/mp4" />
   </video>
+  <div class="o" id="overlay"></div>
+  <div class="f" id="flash"></div>
+
+  <script>
+    (function() {
+      const v = document.querySelector('.v');
+      const o = document.getElementById('overlay');
+      const f = document.getElementById('flash');
+
+      const msgs = [
+        'QUID TE SEQUITUR?',
+        'RESPIRAS NIMIS ALTE.',
+        'OCULI TE SPECTANT.',
+        'NOLI MOVERE.',
+        'IAM VENIT.'
+      ];
+
+      const rand = n => Math.floor(Math.random() * n);
+      let stage = 0; // 0 = video first, 1 = scares/messages enabled
+
+      // Robust autoplay handling: ensure muted inline playback, retry on gestures/visibility
+      function ensurePlayback() {
+        try { v.muted = true; v.autoplay = true; v.playsInline = true; } catch(e) {}
+        try {
+          const p = v.play();
+          if (p && typeof p.then === 'function') p.catch(() => {});
+        } catch(e) {}
+      }
+      // Attempt immediately and on common user gestures
+      ensurePlayback();
+      ['pointerdown','touchstart','click','keydown','visibilitychange'].forEach(evt => {
+        window.addEventListener(evt, () => { if (evt !== 'visibilitychange' || !document.hidden) ensurePlayback(); }, { once: false });
+      });
+
+      // Force fullscreen (allowed only on user gesture): arm retries after gesture
+      const doc = document;
+      function isFs(){ return !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement); }
+      function reqFs(){
+        try {
+          if (isFs()) return;
+          const el = doc.documentElement;
+          if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+          else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+          else if (el.msRequestFullscreen) el.msRequestFullscreen();
+          else if (typeof v.webkitEnterFullscreen === 'function') { try { v.webkitEnterFullscreen(); } catch(e) {} }
+        } catch(e) {}
+      }
+      let fsArmed = false;
+      function armFullscreen(){
+        if (fsArmed) return; fsArmed = true;
+        const start = Date.now();
+        const id = setInterval(() => {
+          if (isFs() || Date.now() - start > 5000) { clearInterval(id); fsArmed = false; return; }
+          reqFs();
+        }, 500);
+      }
+      ['pointerdown','touchstart','click','keydown'].forEach(evt => window.addEventListener(evt, () => { armFullscreen(); reqFs(); }, { once: false }));
+      document.addEventListener('fullscreenchange', () => { if (!isFs()) armFullscreen(); });
+      document.addEventListener('webkitfullscreenchange', () => { if (!isFs()) armFullscreen(); });
+
+      function type(text, cb) {
+        o.textContent = '';
+        let i = 0;
+        const id = setInterval(() => {
+          o.textContent += text[i++] || '';
+          if (i >= text.length) { clearInterval(id); if (cb) setTimeout(cb, 800); }
+        }, 45 + rand(55));
+      }
+
+      function cycle() {
+        if (!stage) return;
+        type(msgs[rand(msgs.length)], () => {
+          setTimeout(cycle, 4000 + rand(4000));
+        });
+      }
+      function enableStage() {
+        if (stage) return; stage = 1;
+        setTimeout(cycle, 3000 + rand(4000));
+        setTimeout(schedule, 8000 + rand(4000));
+        // Attempt fullscreen again when stage enables
+        try { reqFs(); armFullscreen(); } catch(e) {}
+        // ramp ambient if present
+        try { if (ac && gAmb) { const t = ac.currentTime; gAmb.gain.cancelScheduledValues(t); gAmb.gain.setValueAtTime(gAmb.gain.value, t); gAmb.gain.linearRampToValueAtTime(0.018, t + 1.2); } } catch(e) {}
+      }
+      // Decide when to enable stage, based on video duration (or fallback)
+      v.addEventListener('loadedmetadata', () => {
+        const d = isFinite(v.duration) && v.duration ? v.duration : null;
+        const ms = d ? Math.max(20000, Math.min(60000, d * 0.6 * 1000)) : 30000 + rand(10000);
+        setTimeout(enableStage, ms);
+      });
+      // Fallback in case metadata never loads
+      setTimeout(enableStage, 40000);
+
+      // Subtle visual jitter
+      setInterval(() => {
+        const amp = stage ? 1 : 0.35;
+        v.style.transform = `translate(${Math.round((rand(3)-1)*amp)}px,${Math.round((rand(3)-1)*amp)}px) skew(${((rand(3)-1)*amp).toFixed(1)}deg)`;
+        v.style.filter = `contrast(${(1+Math.random()*0.2 + (stage?0.15:0)).toFixed(2)}) saturate(${(1+Math.random()*0.2 + (stage?0.15:0)).toFixed(2)}) hue-rotate(${Math.round((rand(12)-6)*(stage?1:0.5))}deg)`;
+      }, 140);
+
+      // Audio
+      let ac = null, gAmb = null;
+      function initAudio() {
+        if (initAudio._done) return; initAudio._done = true;
+        v.muted = false;
+        try {
+          const AC = window.AudioContext || window.webkitAudioContext; if (!AC) throw 0;
+          ac = new AC();
+          if (ac.state === 'suspended') { ac.resume().catch(() => {}); }
+          // low rumble + hiss ambient
+          const o1 = ac.createOscillator(); o1.type = 'sine'; o1.frequency.value = 38 + rand(7);
+          const nB = ac.createBuffer(1, ac.sampleRate*2, ac.sampleRate);
+          const d0 = nB.getChannelData(0); for (let i=0;i<d0.length;i++) d0[i] = (Math.random()*2-1)*0.018;
+          const ns = ac.createBufferSource(); ns.buffer = nB; ns.loop = true;
+          gAmb = ac.createGain(); gAmb.gain.value = 0.006; // quieter until stage enables
+          o1.connect(gAmb); ns.connect(gAmb); gAmb.connect(ac.destination);
+          o1.start(); ns.start();
+        } catch(e) {}
+      }
+      ['pointerdown','touchstart','click','keydown'].forEach(evt => document.addEventListener(evt, initAudio, { once: true }));
+
+      function blast() {
+        if (!ac) return;
+        try {
+          const g = ac.createGain(); g.gain.value = 0.0001; g.connect(ac.destination);
+          const s1 = ac.createOscillator(); s1.type = 'sawtooth'; s1.frequency.value = 600 + rand(800);
+          const s2 = ac.createOscillator(); s2.type = 'square'; s2.frequency.value = 120 + rand(200);
+          s1.connect(g); s2.connect(g);
+          s1.start(); s2.start();
+          const t = ac.currentTime;
+          g.gain.exponentialRampToValueAtTime(0.6, t+0.08);
+          g.gain.exponentialRampToValueAtTime(0.0001, t+0.28);
+          s1.stop(t+0.35); s2.stop(t+0.35);
+        } catch(e) {}
+      }
+
+      function scare(message) {
+        try { if (navigator.vibrate) navigator.vibrate([20,100,30]); } catch(e) {}
+        try { document.documentElement.classList.add('shk'); setTimeout(() => document.documentElement.classList.remove('shk'), 220); } catch(e) {}
+        f.style.opacity = '1';
+        if (message) type(message);
+        blast();
+        setTimeout(() => { f.style.opacity = '0'; }, 160 + rand(120));
+      }
+
+      function schedule() { if (!stage) return; setTimeout(() => { if(stage) scare(); schedule(); }, 12000 + rand(13000)); }
+
+      // Reactive scares
+      window.addEventListener('contextmenu', e => { e.preventDefault(); if(stage) scare('TITTA INTE.'); });
+      document.addEventListener('keydown', e => {
+        const k = (e.key||'');
+        if (k === 'Escape' || k === 'F12' || (e.ctrlKey && e.shiftKey && (k==='I'||k==='i'||k==='J'||k==='j'))) {
+          e.preventDefault(); if(stage) scare('STÄNG DET.');
+        }
+      });
+
+      // Crude devtools heuristic
+      setInterval(() => {
+        if (stage && (Math.abs(window.outerWidth - window.innerWidth) > 160 || Math.abs(window.outerHeight - window.innerHeight) > 160)) {
+          o.style.color = '#0ff'; o.style.textShadow = '0 0 8px #0ff,0 0 24px #0ff';
+          scare('DU KAN INTE GÖMMA DIG.');
+        }
+      }, 1400);
+    })();
+  </script>
 </body>
 </html>
-
