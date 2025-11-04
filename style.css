@@ -68,3 +68,9 @@ h1 {
   color: #444;
   font-size: 14px;
 }
+
+@media(min-width: 600px){
+    .boxes{
+        grid-template-columns: repeat(3, 1fr);  
+    }
+}
